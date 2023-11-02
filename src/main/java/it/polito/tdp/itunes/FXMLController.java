@@ -5,6 +5,7 @@
 package it.polito.tdp.itunes;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 import it.polito.tdp.itunes.model.Album;
 import it.polito.tdp.itunes.model.Model;
@@ -35,10 +36,10 @@ public class FXMLController {
     private Button btnPercorso; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbA1"
-    private ComboBox<?> cmbA1; // Value injected by FXMLLoader
+    private ComboBox<Album> cmbA1; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbA2"
-    private ComboBox<?> cmbA2; // Value injected by FXMLLoader
+    private ComboBox<Album> cmbA2; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtN"
     private TextField txtN; // Value injected by FXMLLoader
@@ -51,17 +52,73 @@ public class FXMLController {
 
     @FXML
     void doCalcolaAdiacenze(ActionEvent event) {
+    	txtResult.clear();
+    	Album a1 = cmbA1.getValue();
+        List<Album> adiacenze = this.model.getAdiacenze(a1);
+        for(Album a : adiacenze) {
+        	txtResult.appendText(a + " bilancio: " + a.getBilancio() + "\n");
+        }
+        
     	
     }
 
     @FXML
     void doCalcolaPercorso(ActionEvent event) {
+    	txtResult.clear();
+    	Album albumPartenza = cmbA1.getValue();
+    	Album albumArrivo = cmbA2.getValue();
+    	if(albumPartenza == null || albumArrivo == null) {
+    		txtResult.appendText("Selezionare due albume dalle combo box! \n");
+    		return;
+    	}
+    	
+    	Integer x = 0;
+    	
+    	try {
+    	x = Integer.parseInt(txtX.getText());
+    	}
+    	catch(NumberFormatException e) {
+    		txtResult.appendText("Inserire un numero! \n");
+    		return;
+    	}
+    	List<Album> path = this.model.getPath(albumPartenza, albumArrivo, x);
+    	
+    	if(path.isEmpty()) {
+    		txtResult.appendText("Nessun percorso fra i due albume selezionati!\n" );
+    		return;
+    	}
+    	
+    	txtResult.appendText("Stampo il percorso fra " + albumPartenza +" e " + albumArrivo + "\n");
+    	
+    	for(Album a : path) {
+    		txtResult.appendText("" +a + "\n");
+    	}
     	
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
-    	
+    	txtResult.clear();
+    	cmbA1.getItems().clear();
+    	int n = 0;
+    try {	
+      n = Integer.parseInt(txtN.getText());
+      if(n<0) {
+    	  txtResult.appendText("Inserire un numero intero positivo!\n");
+    	  return;
+      }
+    }
+    catch(NumberFormatException e){
+    	txtResult.appendText("Inserire un numero intero!\n");
+    	return;
+    }
+   this.model.createGraph(n);
+   cmbA1.getItems().addAll(this.model.getVertexSetAlphabetically());
+   cmbA2.getItems().addAll(this.model.getVertexSetAlphabetically());
+   txtResult.appendText("Grafo creato! \n");
+   txtResult.appendText("# Vertici: " + this.model.getNVertici() + "\n");
+   txtResult.appendText("# Archi: " + this.model.getNArchi()+ "\n");
+    
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete

@@ -36,6 +36,39 @@ public class ItunesDAO {
 		return result;
 	}
 	
+	
+	public List<Album> getAllAlbumsWithMoreThanNTracks(int n){
+		//Conviene spessso anche se non richiesto immediatamente usare una order by
+		//in questo modo mi è possibile
+		final String sql = "SELECT DISTINCT album.AlbumId, album.Title, T1.nCanzoni "
+				+ "FROM ALBUM, "
+				+ "(SELECT AlbumId, COUNT(*) AS nCanzoni "
+				+ "FROM track "
+				+ "GROUP BY AlbumId) AS T1 "
+				+ "WHERE T1.nCanzoni>? AND T1.AlbumId=album.AlbumId "
+				+ "ORDER BY album.Title";
+		
+	
+		List<Album> result = new LinkedList<>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, n);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				result.add(new Album(res.getInt("AlbumId"), res.getString("Title"),res.getInt("nCanzoni")));
+			}
+			st.close();
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+		return result;
+	}
+	
 	public List<Artist> getAllArtists(){
 		final String sql = "SELECT * FROM Artist";
 		List<Artist> result = new LinkedList<>();
